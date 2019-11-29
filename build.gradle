@@ -2,7 +2,9 @@ plugins {
 	id 'org.springframework.boot' version '2.1.10.RELEASE'
 	id 'io.spring.dependency-management' version '1.0.8.RELEASE'
 	id 'java'
+	id 'groovy'
 }
+
 
 group = 'com.donghyeon'
 version = '0.0.1-SNAPSHOT'
@@ -24,4 +26,7 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'io.projectreactor:reactor-test'
+
+	testCompile('org.spockframework:spock-core:1.1-groovy-2.4') // Spock 의존성 추가
+	testCompile('org.spockframework:spock-spring:1.1-groovy-2.4') // Spock 의존성 추가
 }
