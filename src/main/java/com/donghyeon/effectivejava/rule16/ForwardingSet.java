@@ -4,6 +4,9 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 
+/**
+ * 전달 클래스!
+ */
 public class ForwardingSet<E> implements Set {
     private final Set<E> s;
 
