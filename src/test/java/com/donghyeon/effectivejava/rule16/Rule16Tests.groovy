@@ -4,11 +4,10 @@ import spock.lang.Specification;
 
 
 class Rule16Tests extends Specification {
-
     def "HashSet이 생성된 후 얼마나 많은 요소가 추가되었는지 확인하는 테스트"() {
         given:
         List<Integer> addAll당할리스트 = Arrays.asList(1, 5, 3)
-        InstrumentedHashSet<Integer> 규칙16커스텀해쉬셋 = new InstrumentedHashSet<>(new HashSet<Integer>())
+        InstrumentedSet<Integer> 규칙16커스텀해쉬셋 = new InstrumentedSet<>(new HashSet<Integer>())
 
         when:
         규칙16커스텀해쉬셋.addAll(addAll당할리스트)

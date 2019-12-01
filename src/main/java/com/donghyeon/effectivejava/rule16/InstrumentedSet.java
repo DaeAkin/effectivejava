@@ -7,11 +7,11 @@ import java.util.Set;
  * HashSet을 계승받아 HashSet객체가 생성된 이후에
  * 얼마나 많은 요소가 추가되었는지 확인하는 클래스
  */
-public class InstrumentedHashSet<E> extends ForwardingSet<E> {
+public class InstrumentedSet<E> extends ForwardingSet<E> {
     //삽입 횟수
     private int addCount = 0;
 
-    public InstrumentedHashSet(Set<E> s) {
+    public InstrumentedSet(Set<E> s) {
         super(s);
     }
 

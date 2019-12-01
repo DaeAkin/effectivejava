@@ -16,24 +16,24 @@ interface가 다른 interface를 extends를 하는 상황말고, 클래스가 �
 
 그러나 상위 클래스의 구현이 릴리즈 되면서 코드내용이 수정될 수 있는데, 그러다 보면 코드변경이 전혀 없는 하위 클래스가 망가질 수 있습니다.
 
-HashSet의 객체가 원소를 몇번 삽입했는지 추적할 수 있는 InstrumentedHashSet 클래스를 만들어 보겠습니다.
+HashSet의 객체가 원소를 몇번 삽입했는지 추적할 수 있는 InstrumentedSet 클래스를 만들어 보겠습니다.
 
-### InstrumentedHashSet
+## InstrumentedSet
 
 ```java 
 /**
  * HashSet을 계승받아 HashSet객체가 생성된 이후에
  * 얼마나 많은 요소가 추가되었는지 확인하는 클래스
  */
-public class InstrumentedHashSet<E> extends HashSet<E> {
+public class InstrumentedSet<E> extends HashSet<E> {
     //삽입 횟수
     private int addCount = 0;
 
-    public InstrumentedHashSet() {
+    public InstrumentedSet() {
         super();
     }
 
-    public InstrumentedHashSet(int initialCapacity, float loadFactor) {
+    public InstrumentedSet(int initialCapacity, float loadFactor) {
         super(initialCapacity, loadFactor);
     }
 
@@ -57,7 +57,7 @@ public class InstrumentedHashSet<E> extends HashSet<E> {
 
 
 
-### 테스트하기
+## 테스트하기
 
 이 코드의 테스트코드를 작성해보겠습니다.
 
@@ -67,7 +67,7 @@ class Rule16Tests extends Specification {
     def "HashSet이 생성된 후 얼마나 많은 요소가 추가되었는지 확인하는 테스트"() {
         given:
         List<Integer> addAll당할리스트 = Arrays.asList(1, 5, 3)
-        HashSet<Integer> 규칙16커스텀해쉬셋 = new InstrumentedHashSet<>();
+        HashSet<Integer> 규칙16커스텀해쉬셋 = new InstrumentedSet<>();
 
         when:
         규칙16커스텀해쉬셋.addAll(addAll당할리스트)
@@ -87,7 +87,7 @@ ArrayList에 addAll에 사용될 리스트를 만들고 .addAll()를 호출해�
 
 실제의 삽입 횟수는 6이 호출됩니다.
 
-### 결과
+## 결과
 
 ```
 삽입횟수 : 6
@@ -113,9 +113,9 @@ HashSet의 addAll()은 내부적으로 HashSet의 add() 함수를 이용하기 �
 
 그러나 이 HashSet 함수가 릴리즈를 거듭나면서 바뀔 가능성이 있기 때문에, 
 
-따라서 우리가 구현한 InstrumentedHashSet 클래스는 깨지기 쉬운(fragile) 클래스일 수 밖에 없습니다.
+따라서 우리가 구현한 InstrumentedSet 클래스는 깨지기 쉬운(fragile) 클래스일 수 밖에 없습니다.
 
-### 어떻게할까?
+## 어떻게할까?
 
 이 문제를 피하기 위해서는 기존 클래스를 계승하는 대, 새로운 클래스에 기존 클래스 객체를 참조하는 private 필드를 하나 두면 됩니다.
 
@@ -123,7 +123,156 @@ HashSet의 addAll()은 내부적으로 HashSet의 add() 함수를 이용하기 �
 
 새 클래스는 기존클래스에필요한 메소드만 호출해서 그 결과를 반환하면 되는데, 이런 기법을 전달이라고 하고,
 
-전달 기법을 사용해 구현된 ㅁ
+전달 기법을 사용해 구현된 메서드를 전달 메서드라고 부릅니다. 구성 기법을 통해 구현된 클래스는 견고합니다.
+
+기존 클래스의 구현 세부사항에 종속되지 않기 때문입니다. 
+
+## InstrumentedSet
+
+```java
+/**
+ * HashSet을 계승받아 HashSet객체가 생성된 이후에
+ * 얼마나 많은 요소가 추가되었는지 확인하는 클래스
+ */
+public class InstrumentedSet<E> extends ForwardingSet<E> {
+    //삽입 횟수
+    private int addCount = 0;
+
+    public InstrumentedSet(Set<E> s) {
+        super(s);
+    }
+
+    @Override
+    public boolean add(Object e) {
+        addCount++;
+        return super.add(e);
+    }
+
+    @Override
+    public boolean addAll(Collection c) {
+        addCount += c.size();
+        return super.addAll(c);
+    }
+
+    public int getAddCount() {
+        return addCount;
+    }
+}
+```
+
+## ForwardingSet
+
+```java
+package com.donghyeon.effectivejava.rule16;
+
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Set;
+
+/**
+ * 전달 클래스!
+ */
+public class ForwardingSet<E> implements Set {
+    private final Set<E> s;
+
+    public ForwardingSet(Set<E> s) {
+        this.s = s;
+    }
+
+    @Override
+    public int size() {
+        return s.size();
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return s.isEmpty();
+    }
+
+    @Override
+    public boolean contains(Object o) {
+        return s.contains(o);
+    }
+
+    @Override
+    public Iterator iterator() {
+        return s.iterator();
+    }
+
+    @Override
+    public Object[] toArray() {
+        return s.toArray();
+    }
+
+    @Override
+    public boolean add(Object o) {
+        return s.add((E) o);
+    }
+
+    @Override
+    public boolean remove(Object o) {
+        return s.remove(o);
+    }
+
+    @Override
+    public boolean addAll(Collection c) {
+        return s.addAll(c);
+    }
+
+    @Override
+    public void clear() {
+        s.clear();
+    }
+
+    @Override
+    public boolean removeAll(Collection c) {
+        return s.removeAll(c);
+    }
+
+    @Override
+    public boolean retainAll(Collection c) {
+        return s.retainAll(c);
+    }
+
+    @Override
+    public boolean containsAll(Collection c) {
+        return s.containsAll(c);
+    }
+
+    @Override
+    public Object[] toArray(Object[] a) {
+        return s.toArray();
+    }
+}
+
+```
+
+![](https://github.com/DaeAkin/effectivejava/blob/master/src/main/java/com/donghyeon/effectivejava/rule16/image/%EC%A0%84%EB%8B%AC%ED%81%B4%EB%9E%98%EC%8A%A4%EC%84%A4%EB%AA%85.jpeg?raw=true)
+
+InstrumentedSet을 이렇게 설계할 수 있는 것은 HashSet이 제공해야할 기능을 규정하는 Set이라는 인터페이스가 있기 때문입니다. 이런 설계는 안정적일 뿐 아니라 유연성도 아주 높습니다.
+
+InstrumentedSet 클래스는 Set 인터페이스를 구 현하며 Set 객체를 인자로 받는 생성자를 하나 갖고 있습니다. 
+결국 이 클래스는 어떤 Set 객체를 인자로 받아, 필요한 기능을 갖춘 다른 Set 객체로 변환하는 구실을 합니다.
+
+계승을 이용한 접근법은 한 클래스에만 적용이 가능하고, 상위 클래스 생성자마다 별도의 생성자를 구현해야 합니다.
+
+하지만 이런 기법을 사용하면 어떤 Set 구현도 원하는 대로 수정할 수 있고, 이미 있는 생성자도 그대로 사용할 수 있습니다.
+
+```java
+Set<Date> s = new InstrumentedSet<Date>(new TreeSet<Date>)(cmp));
+```
 
 
 
+InstrumentedSet과 같은 클래스를 `포장 클래스`(wrapper class)라고 부는데, 다른 Set 객체를 포장하고 있기 때문입니다.
+또한 이런 구현 기법은 장식자(decorator) 패턴이라고도 부르는데, 기존 Set 객체에 기능을 덧 붙여 장식하는 구실을 하기 때문입니다.
+때로는 구성과 전달 기법을 아울러서 막연하게 위임(delegation)이라고 부르기도 합니다.
+
+그런데 기술적으로 보자면, 포장 객체가 자기 자신을 포장된 객체에 전달하지 않으면 위임이라고 부를 수 없습니다.
+
+## 마무리
+
+계승은 강력한 도구이지만 캡슐화 원칙을 침해하므로 문제를 발생시킬 소지가 있습니다.
+상위 클래스와 하위 클래스 사이에 IS-A 관계가 있을 때만 사용하는 것이 좋습니다.
+
+IS-A 관계가 성립해도, 하위 클래스가 상위 클래스와 다른 패키지에 있거나 계승을 고려해 만들어진 상위 클래스가 아니라면 하위클래스는 깨지기 쉽습니다. 이런 문제를 피하려면 구성과 전달 기법을 사용하는 것이 좋습니다.
